@@ -8,7 +8,7 @@
     "homepage": "https://github.com/xicilion/fib-pool",
     "license": "MIT",
     "scripts": {
-        "ci": "fibjs test/main.js"
+        "ci": "fibjs test.js"
     },
     "devDependencies": {
         "@fibjs/ci": "^1.0.0",
