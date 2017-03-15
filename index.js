@@ -56,18 +56,38 @@ module.exports = (opt, maxsize, timeout) => {
         }
     }
 
-    var pool = (func) => {
+    var pool = (name, func) => {
+        if (util.isFunction(name)) {
+            func = name;
+            name = "";
+        }
+
         var r;
         var o;
+        var p = false;
 
         clearPool();
         sem.acquire();
 
         try {
-            o = count ? pools[--count].o : create();
+            if (count) {
+                for (var i = count - 1; i >= 0; i--)
+                    if (pools[i].name === name) {
+                        p = true
+                        o = pools[i].o;
+                        pools.splice(i, 1);
+                        count--;
+                    }
+            }
+
+            if (!p) {
+                o = create(name);
+            }
+
             r = func(o);
             pools[count++] = {
                 o: o,
+                name: name,
                 time: new Date()
             };
         } catch (e) {

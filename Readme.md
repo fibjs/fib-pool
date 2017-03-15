@@ -70,3 +70,24 @@ p((conn) => {
 });
 
 ```
+
+## Using the pool with name
+```JavaScript
+var db = require("db");
+var Pool = require("fib-pool");
+
+var p = Pool({
+    create: (name) => {
+        return db.open("sqlite:" + name + ".db");
+    },
+    destroy: (o) => {
+        o.close()
+    },
+    timeout: 30 * 1000
+});
+
+p("test", (conn) => {
+    conn.execute("delect * from test");
+});
+
+```

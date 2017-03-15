@@ -29,6 +29,35 @@ describe("pool", () => {
         }), 2);
     });
 
+    it("name", () => {
+        var n = 0;
+
+        var p = Pool((name) => {
+            n++;
+            return name;
+        });
+
+        assert.equal(n, 0);
+
+        assert.equal(p('a', (v) => {
+            return v;
+        }), 'a');
+
+        assert.equal(n, 1);
+
+        assert.equal(p('b', (v) => {
+            return v;
+        }), 'b');
+
+        assert.equal(n, 2);
+
+        assert.equal(p('a', (v) => {
+            return v;
+        }), 'a');
+
+        assert.equal(n, 2);
+    });
+
     it("throw", () => {
         var n = 0;
 
