@@ -11,7 +11,7 @@ npm install fib-pool [--save]
 ## Test
 
 ```sh
-npm ci
+npm run ci
 ```
 
 ## Creating a pool
