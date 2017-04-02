@@ -3,9 +3,9 @@
     "version": "1.0.1",
     "description": "Generic resource pooling for fibjs",
     "main": "index.js",
-    "repository": "git://github.com/xicilion/fib-pool.git",
+    "repository": "git://github.com/fibjs/fib-pool.git",
     "author": "Liu Hu <lion@9465.net>",
-    "homepage": "https://github.com/xicilion/fib-pool",
+    "homepage": "https://github.com/fibjs/fib-pool",
     "license": "MIT",
     "keywords": [
         "pool",
