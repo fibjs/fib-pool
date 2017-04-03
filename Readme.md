@@ -1,6 +1,6 @@
 ## Generic resource pooling for fibjs
 
-[![Build Status](https://travis-ci.org/xicilion/fib-pool.svg)](https://travis-ci.org/xicilion/fib-pool)
+[![Build Status](https://travis-ci.org/fibjs/fib-pool.svg)](https://travis-ci.org/fibjs/fib-pool)
 
 ## Install
 
