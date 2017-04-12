@@ -46,7 +46,8 @@ var p = Pool({
     destroy: (o) => {
         o.close()
     },
-    timeout: 30 * 1000
+    timeout: 30 * 1000,
+    retry: 3
 });
 ```
 
@@ -62,7 +63,8 @@ var p = Pool({
     destroy: (o) => {
         o.close()
     },
-    timeout: 30 * 1000
+    timeout: 30 * 1000,
+    retry: 3
 });
 
 p((conn) => {

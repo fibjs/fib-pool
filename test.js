@@ -197,7 +197,51 @@ describe("pool", () => {
         assert.isTrue(called);
         assert.equal(p.connections(), 0);
     });
+
+    it("retry", () => {
+        var n = 0;
+
+        var p = Pool(() => {
+            n++;
+            throw "open error";
+        });
+
+        assert.throws(() => {
+            p((v) => {});
+        });
+
+        assert.equal(n, 1);
+
+        var n1 = 0;
+        var p1 = Pool({
+            create: () => {
+                n1++;
+                throw "open error";
+            },
+            retry: 10
+        });
+
+        assert.throws(() => {
+            p1((v) => {});
+        });
+
+        assert.equal(n1, 10);
+
+        var n2 = 0;
+        var p2 = Pool({
+            create: () => {
+                n2++;
+                if (n2 == 3)
+                    return;
+                throw "open error";
+            },
+            retry: 10
+        });
+
+        p2((v) => {});
+
+        assert.equal(n2, 3);
+    });
 });
 
-test.run(console.DEBUG);
-process.exit(0);
+process.exit(test.run(console.DEBUG));

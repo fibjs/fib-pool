@@ -26,6 +26,8 @@ module.exports = (opt, maxsize, timeout) => {
     if (tm < 10)
         tm = 10;
 
+    var retry = opt.retry || 1;
+
     var pools = [];
     var count = 0;
 
@@ -81,7 +83,17 @@ module.exports = (opt, maxsize, timeout) => {
             }
 
             if (!p) {
-                o = create(name);
+                var cn = 0;
+
+                while (true) {
+                    try {
+                        o = create(name);
+                        break;
+                    } catch (e) {
+                        if (++cn >= retry)
+                            throw e;
+                    }
+                }
             }
 
             r = func(o);
