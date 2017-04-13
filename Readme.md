@@ -17,7 +17,8 @@ npm run ci
 ## Creating a pool
 
 Simple example.
-```JavaScript
+
+```js
 var db = require("db");
 var Pool = require("fib-pool");
 
@@ -25,8 +26,10 @@ var p = Pool(() => {
     return db.open("sqlite:test.db");
 });
 ```
+
 Specify maxsize and timeout.
-```JavaScript
+
+```js
 var db = require("db");
 var Pool = require("fib-pool");
 
@@ -34,8 +37,10 @@ var p = Pool(() => {
     return db.open("sqlite:test.db");
 }, 10, 30 * 1000);
 ```
+
 Specify custom destroy function.
-```JavaScript
+
+```js
 var db = require("db");
 var Pool = require("fib-pool");
 
@@ -52,7 +57,8 @@ var p = Pool({
 ```
 
 ## Using the pool
-```JavaScript
+
+```js
 var db = require("db");
 var Pool = require("fib-pool");
 
@@ -67,14 +73,15 @@ var p = Pool({
     retry: 3
 });
 
-p((conn) => {
-    conn.execute("delect * from test");
+var res = p((conn) => {
+    conn.execute("select * from test");
 });
 
 ```
 
 ## Using the pool with name
-```JavaScript
+
+```js
 var db = require("db");
 var Pool = require("fib-pool");
 
@@ -88,8 +95,8 @@ var p = Pool({
     timeout: 30 * 1000
 });
 
-p("test", (conn) => {
-    conn.execute("delect * from test");
+var res = p("test", (conn) => {
+    conn.execute("select * from test");
 });
 
 ```

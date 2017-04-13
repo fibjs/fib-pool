@@ -16,8 +16,7 @@
         "ci": "fibjs test.js"
     },
     "devDependencies": {
-        "@fibjs/ci": "^1.0.0",
-        "lodash": "^4.17.4"
+        "@fibjs/ci": "^1.0.0"
     },
     "ci": {
         "type": "travis"
