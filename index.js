@@ -45,7 +45,8 @@ module.exports = (opt, maxsize, timeout) => {
                 pools = pools.slice(1);
                 count--;
 
-                coroutine.start(destroy, c.o);
+                if (c.o !== undefined)
+                    coroutine.start(destroy, c.o);
             } else
                 break;
         }
@@ -103,7 +104,8 @@ module.exports = (opt, maxsize, timeout) => {
                 time: new Date()
             };
         } catch (e) {
-            coroutine.start(destroy, o);
+            if (o !== undefined)
+                coroutine.start(destroy, o);
             throw e;
         } finally {
             sem.post();
@@ -120,7 +122,6 @@ module.exports = (opt, maxsize, timeout) => {
     pool.info = () => {
         return {
             maxsize: maxsize,
-            pools: pools.length,
             count: count,
             wait: sem.count(),
             timeout: timeout
