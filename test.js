@@ -29,6 +29,28 @@ describe("pool", () => {
         }), 2);
     });
 
+    it("maxsize", () => {
+        var n = 0;
+        var m = 0;
+
+        var p = Pool(() => {
+            // n++;
+            return n;
+        }, 10);
+
+        coroutine.parallel(() => {
+            p((c) => {
+                n++;
+                if (n > m)
+                    m = n;
+                coroutine.sleep(50);
+                n--;
+            });
+        }, 20);
+
+        assert.equal(m, 10);
+    });
+
     it("name", () => {
         var n = 0;
 
