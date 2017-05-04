@@ -1,6 +1,6 @@
 {
     "name": "fib-pool",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "Generic resource pooling for fibjs",
     "main": "index.js",
     "repository": "git://github.com/fibjs/fib-pool.git",
