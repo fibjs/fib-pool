@@ -264,6 +264,27 @@ describe("pool", () => {
 
         assert.equal(n2, 3);
     });
+
+    it("maxsize and create",function(){
+        var createCount = 0,
+            maxsize = 2;
+
+        var p = Pool({
+            create: () => {
+                createCount++;
+                return {};
+            },
+            maxsize: maxsize
+        });
+
+        coroutine.parallel(["a","b","c","d"], function(n){
+            p((n) => {
+                coroutine.sleep(50);
+            })
+        });
+
+        assert.equal(createCount, maxsize);
+    });
 });
 
 process.exit(test.run(console.DEBUG));
