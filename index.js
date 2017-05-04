@@ -80,6 +80,7 @@ module.exports = (opt, maxsize, timeout) => {
                         o = pools[i].o;
                         pools.splice(i, 1);
                         count--;
+                        break;
                     }
             }
 
