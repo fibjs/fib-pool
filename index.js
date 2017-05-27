@@ -129,5 +129,19 @@ module.exports = (opt, maxsize, timeout) => {
 		}
 	}
 
+	pool.clear = () => {
+		pools.forEach(function(c) {
+			destroy(c.o);
+			count--;
+		});
+
+		pools.length = 0;
+
+		if (clearTimer) {
+			clearTimer.clear();
+			clearTimer = null;
+		}
+	}
+
 	return pool;
 }

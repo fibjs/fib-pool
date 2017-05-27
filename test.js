@@ -285,6 +285,43 @@ describe("pool", () => {
 
 		assert.equal(createCount, maxsize);
 	});
+
+	it("clear", function() {
+		function parallel(data) {
+			coroutine.parallel(data, function(n) {
+				p((n) => {
+					coroutine.sleep(50);
+				})
+			});
+		};
+
+		var maxsize = 3;
+
+		var p = Pool({
+			create: () => {
+				return {};
+			},
+			maxsize: maxsize,
+			timeout: 60 * 1000
+		});
+
+		parallel(["a", "b", "c", "d"]);
+
+		assert.equal(p.info().count, maxsize);
+
+		p.clear();
+
+		assert.equal(p.info().count, 0);
+
+		parallel(["a"]);
+
+		assert.equal(p.info().count, 1);
+
+		p.clear();
+
+		assert.equal(p.info().count, 0);
+
+	});
 });
 
 process.exit(test.run(console.DEBUG));
