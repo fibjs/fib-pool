@@ -27,21 +27,6 @@ var p = Pool(() => {
 });
 ```
 
-## Clear a pool
-
-Simple example.
-
-```js
-var db = require("db");
-var Pool = require("fib-pool");
-
-var p = Pool(() => {
-    return db.open("sqlite:test.db");
-});
-
-p.clear();
-```
-
 Specify maxsize and timeout.
 
 ```js
@@ -114,4 +99,19 @@ var res = p("test", (conn) => {
     conn.execute("select * from test");
 });
 
+```
+
+## Clear a pool
+
+Simple example.
+
+```js
+var db = require("db");
+var Pool = require("fib-pool");
+
+var p = Pool(() => {
+    return db.open("sqlite:test.db");
+});
+
+p.clear();
 ```
