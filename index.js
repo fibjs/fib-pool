@@ -135,7 +135,7 @@ module.exports = (opt, maxsize, timeout) => {
             count--;
         });
 
-        pools.length = [];
+        pools = [];
 
         if (clearTimer) {
             clearTimer.clear();
