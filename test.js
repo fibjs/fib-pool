@@ -265,7 +265,61 @@ describe("pool", () => {
         assert.equal(n2, 3);
     });
 
-    it("maxsize and create",function(){
+    it("long time create", () => {
+        var called = 0;
+
+        var p = Pool({
+            create: () => {
+                called++;
+                if (called == 1)
+                    coroutine.sleep(20);
+                return called;
+            }
+        });
+
+        var cs = [];
+        coroutine.parallel([0, 1, 2, 3, 4], n => {
+            p((c) => {
+                coroutine.sleep(1);
+                cs[n] = c;
+            });
+        });
+
+        assert.deepEqual(cs, [2, 3, 4, 5, 2]);
+        assert.equal(p.info().count, 4);
+        coroutine.sleep(100);
+        assert.equal(p.info().count, 5);
+    });
+
+    it("long time fault create", () => {
+        var called = 0;
+
+        var p = Pool({
+            create: () => {
+                called++;
+                if (called == 1) {
+                    coroutine.sleep(20);
+                    throw 100;
+                }
+                return called;
+            }
+        });
+
+        var cs = [];
+        coroutine.parallel([0, 1, 2, 3, 4], n => {
+            p((c) => {
+                coroutine.sleep(1);
+                cs[n] = c;
+            });
+        });
+
+        assert.deepEqual(cs, [2, 3, 4, 5, 2]);
+        assert.equal(p.info().count, 4);
+        coroutine.sleep(100);
+        assert.equal(p.info().count, 4);
+    });
+
+    it("maxsize and create", () => {
         var createCount = 0,
             maxsize = 2;
 
@@ -277,7 +331,7 @@ describe("pool", () => {
             maxsize: maxsize
         });
 
-        coroutine.parallel(["a","b","c","d"], function(n){
+        coroutine.parallel(["a", "b", "c", "d"], n => {
             p((n) => {
                 coroutine.sleep(50);
             })
@@ -286,9 +340,9 @@ describe("pool", () => {
         assert.equal(createCount, maxsize);
     });
 
-    it("clear", function() {
+    it("clear", () => {
         function parallel(data) {
-            coroutine.parallel(data, function(n) {
+            coroutine.parallel(data, function (n) {
                 p((n) => {
                     coroutine.sleep(50);
                 })

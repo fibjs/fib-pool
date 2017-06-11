@@ -29,6 +29,7 @@ module.exports = (opt, maxsize, timeout) => {
     var retry = opt.retry || 1;
 
     var pools = [];
+    var jobs = [];
     var count = 0;
 
     var sem = new coroutine.Semaphore(maxsize);
@@ -65,6 +66,26 @@ module.exports = (opt, maxsize, timeout) => {
             name = "";
         }
 
+        function putback(name, o, e) {
+            for (var i = 0; i < jobs.length; i++) {
+                var job = jobs[i];
+                if (job.name === name) {
+                    jobs.splice(i, 1);
+                    job.o = o;
+                    job.e = e;
+                    job.ev.set();
+                    return;
+                }
+            }
+
+            if (e === undefined)
+                pools[count++] = {
+                    o: o,
+                    name: name,
+                    time: new Date()
+                };
+        }
+
         var r;
         var o;
         var p = false;
@@ -85,25 +106,40 @@ module.exports = (opt, maxsize, timeout) => {
             }
 
             if (!p) {
-                var cn = 0;
+                coroutine.start(() => {
+                    var o;
+                    var cn = 0;
+                    var err;
 
-                while (true) {
-                    try {
-                        o = create(name);
-                        break;
-                    } catch (e) {
-                        if (++cn >= retry)
-                            throw e;
+                    while (true) {
+                        try {
+                            o = create(name);
+                            break;
+                        } catch (e) {
+                            if (++cn >= retry) {
+                                err = e;
+                                break;
+                            }
+                        }
                     }
-                }
+
+                    putback(name, o, err);
+                });
+
+                var job = {
+                    name: name,
+                    ev: new coroutine.Event()
+                };
+                jobs.push(job);
+
+                job.ev.wait();
+                if (job.e)
+                    throw job.e;
+                o = job.o;
             }
 
             r = func(o);
-            pools[count++] = {
-                o: o,
-                name: name,
-                time: new Date()
-            };
+            putback(name, o);
         } catch (e) {
             if (o !== undefined)
                 coroutine.start(destroy, o);
@@ -130,7 +166,7 @@ module.exports = (opt, maxsize, timeout) => {
     }
 
     pool.clear = () => {
-        pools.forEach(function(c) {
+        pools.forEach(function (c) {
             destroy(c.o);
             count--;
         });
