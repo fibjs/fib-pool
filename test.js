@@ -3,7 +3,7 @@ test.setup();
 
 var coroutine = require("coroutine");
 
-var Pool = require(".");
+var Pool = require("./index");
 
 describe("pool", () => {
     it("run", () => {
@@ -172,6 +172,26 @@ describe("pool", () => {
         assert.isFalse(called);
         coroutine.sleep(10);
         assert.isTrue(called);
+    });
+
+
+    it("default destroy function, but destroy is not a function, mongodb3.0 case", ()=>{
+        var cnt = 0;
+        var p = Pool({
+            create: () => {
+                return {
+                    destroy: ++cnt
+                    }
+                }
+            })
+
+        assert.throws(() => {
+            p((v) => {
+                throw "error";
+            });
+        });
+
+        assert.equal(cnt, 1);
     });
 
     it("default dispose function", () => {

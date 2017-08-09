@@ -12,11 +12,11 @@ module.exports = (opt, maxsize, timeout) => {
 
     var create = opt.create;
     var destroy = opt.destroy || ((o) => {
-        if (o.close)
+        if (util.isFunction(o.close))
             o.close();
-        if (o.destroy)
+        if (util.isFunction(o.destroy))
             o.destroy();
-        if (o.dispose)
+        if (util.isFunction(o.dispose))
             o.dispose();
     });
 
