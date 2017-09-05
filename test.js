@@ -175,15 +175,15 @@ describe("pool", () => {
     });
 
 
-    it("default destroy function, but destroy is not a function, mongodb3.0 case", ()=>{
+    it("default destroy function, but destroy is not a function, mongodb3.0 case", () => {
         var cnt = 0;
         var p = Pool({
             create: () => {
                 return {
                     destroy: ++cnt
-                    }
                 }
-            })
+            }
+        })
 
         assert.throws(() => {
             p((v) => {
@@ -384,17 +384,13 @@ describe("pool", () => {
         assert.equal(p.info().count, maxsize);
 
         p.clear();
+        coroutine.sleep(100);
 
         assert.equal(p.info().count, 0);
 
         parallel(["a"]);
 
-        assert.equal(p.info().count, 1);
-
-        p.clear();
-
         assert.equal(p.info().count, 0);
-
     });
 });
 

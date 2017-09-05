@@ -166,17 +166,8 @@ module.exports = (opt, maxsize, timeout) => {
     }
 
     pool.clear = () => {
-        pools.forEach(function (c) {
-            destroy(c.o);
-            count--;
-        });
-
-        pools = [];
-
-        if (clearTimer) {
-            clearTimer.clear();
-            clearTimer = null;
-        }
+        timeout = -1;
+        clearPool();
     }
 
     return pool;
