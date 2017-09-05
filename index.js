@@ -52,38 +52,60 @@ module.exports = (opt, maxsize, timeout) => {
                 break;
         }
 
-        if (!clearTimer)
+        if (!count) {
+            if (clearTimer) {
+                clearTimer.clear();
+                clearTimer = null;
+            }
+        } else if (!clearTimer)
             clearTimer = setInterval(clearPool, tm);
-        else if (!count) {
-            clearTimer.clear();
-            clearTimer = null;
+
+    }
+
+    function putback(name, o, e) {
+        for (var i = 0; i < jobs.length; i++) {
+            var job = jobs[i];
+            if (job.name === name) {
+                jobs.splice(i, 1);
+                job.o = o;
+                job.e = e;
+                job.ev.set();
+                return;
+            }
         }
+
+        if (e === undefined)
+            pools[count++] = {
+                o: o,
+                name: name,
+                time: new Date()
+            };
+    }
+
+    function connect(name) {
+        var o;
+        var cn = 0;
+        var err;
+
+        while (true) {
+            try {
+                o = create(name);
+                break;
+            } catch (e) {
+                if (++cn >= retry) {
+                    err = e;
+                    break;
+                }
+            }
+        }
+
+        putback(name, o, err);
     }
 
     var pool = (name, func) => {
         if (util.isFunction(name)) {
             func = name;
             name = "";
-        }
-
-        function putback(name, o, e) {
-            for (var i = 0; i < jobs.length; i++) {
-                var job = jobs[i];
-                if (job.name === name) {
-                    jobs.splice(i, 1);
-                    job.o = o;
-                    job.e = e;
-                    job.ev.set();
-                    return;
-                }
-            }
-
-            if (e === undefined)
-                pools[count++] = {
-                    o: o,
-                    name: name,
-                    time: new Date()
-                };
         }
 
         var r;
@@ -106,25 +128,7 @@ module.exports = (opt, maxsize, timeout) => {
             }
 
             if (!p) {
-                coroutine.start(() => {
-                    var o;
-                    var cn = 0;
-                    var err;
-
-                    while (true) {
-                        try {
-                            o = create(name);
-                            break;
-                        } catch (e) {
-                            if (++cn >= retry) {
-                                err = e;
-                                break;
-                            }
-                        }
-                    }
-
-                    putback(name, o, err);
-                });
+                coroutine.start(connect, name);
 
                 var job = {
                     name: name,
