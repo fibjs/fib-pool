@@ -31,6 +31,7 @@ module.exports = (opt, maxsize, timeout) => {
     var pools = [];
     var jobs = [];
     var count = 0;
+    var running = 0;
 
     var sem = new coroutine.Semaphore(maxsize);
     var clearTimer;
@@ -115,33 +116,34 @@ module.exports = (opt, maxsize, timeout) => {
         clearPool();
         sem.acquire();
 
+        if (count) {
+            for (var i = count - 1; i >= 0; i--)
+                if (pools[i].name === name) {
+                    p = true
+                    o = pools[i].o;
+                    pools.splice(i, 1);
+                    count--;
+                    break;
+                }
+        }
+
+        if (!p) {
+            coroutine.start(connect, name);
+
+            var job = {
+                name: name,
+                ev: new coroutine.Event()
+            };
+            jobs.push(job);
+
+            job.ev.wait();
+            if (job.e)
+                throw job.e;
+            o = job.o;
+        }
+
+        running++;
         try {
-            if (count) {
-                for (var i = count - 1; i >= 0; i--)
-                    if (pools[i].name === name) {
-                        p = true
-                        o = pools[i].o;
-                        pools.splice(i, 1);
-                        count--;
-                        break;
-                    }
-            }
-
-            if (!p) {
-                coroutine.start(connect, name);
-
-                var job = {
-                    name: name,
-                    ev: new coroutine.Event()
-                };
-                jobs.push(job);
-
-                job.ev.wait();
-                if (job.e)
-                    throw job.e;
-                o = job.o;
-            }
-
             r = func(o);
             putback(name, o);
         } catch (e) {
@@ -149,6 +151,7 @@ module.exports = (opt, maxsize, timeout) => {
                 coroutine.start(destroy, o);
             throw e;
         } finally {
+            running--;
             sem.post();
             clearPool();
         }
@@ -164,6 +167,7 @@ module.exports = (opt, maxsize, timeout) => {
         return {
             maxsize: maxsize,
             count: count,
+            running: running,
             wait: sem.count(),
             timeout: timeout
         }

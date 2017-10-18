@@ -18,6 +18,7 @@ describe("pool", () => {
 
     it("pool", () => {
         var n = 0;
+        var running = -1;
 
         var p = Pool(() => {
             n++;
@@ -25,8 +26,12 @@ describe("pool", () => {
         });
 
         assert.equal(p((v) => {
+            running = p.info().running;
             return v + 1;
         }), 2);
+
+        assert.equal(running, 1);
+        assert.equal(p.info().running, 0);
     });
 
     it("maxsize", () => {
@@ -82,6 +87,7 @@ describe("pool", () => {
 
     it("throw", () => {
         var n = 0;
+        var running = -1;
 
         var p = Pool(() => {
             n++;
@@ -94,9 +100,12 @@ describe("pool", () => {
 
         assert.throws(() => {
             p((v) => {
+                running = p.info().running;
                 throw "error";
             });
         });
+        assert.equal(running, 1);
+        assert.equal(p.info().running, 0);
 
         assert.equal(p((v) => {
             return v + 1;
