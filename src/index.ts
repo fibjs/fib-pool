@@ -1,17 +1,20 @@
-var coroutine = require('coroutine');
-var util = require('util');
+import coroutine = require('coroutine');
+import util = require('util');
+import { FibPoolInnerErr, FibPoolOptsArg, FibPoolOptionResult, FibPoolInnerJobName, FibPoolPayloadObject, FibPoolUnit, FibPoolInnerJob, FibPool, FibPoolSeed, FibPoolObjectToExtract } from '../@types';
+import { setInterval } from 'timers';
 
-module.exports = (opt, maxsize, timeout) => {
-    if (util.isFunction(opt)) {
+function Pool (_opt: FibPoolOptsArg, maxsize: number, timeout: number): FibPool {
+    var opt: FibPoolOptionResult = _opt as FibPoolOptionResult;
+    if (util.isFunction(_opt)) {
         opt = {
-            create: opt,
+            create: _opt,
             maxsize: maxsize,
             timeout: timeout
-        };
+        } as FibPoolOptionResult;
     }
 
     var create = opt.create;
-    var destroy = opt.destroy || ((o) => {
+    var destroy = opt.destroy || ((o: FibPoolObjectToExtract) => {
         if (util.isFunction(o.close))
             o.close();
         if (util.isFunction(o.destroy))
@@ -28,16 +31,16 @@ module.exports = (opt, maxsize, timeout) => {
 
     var retry = opt.retry || 1;
 
-    var pools = [];
-    var jobs = [];
+    var pools: FibPoolUnit[] = [];
+    var jobs: FibPoolInnerJob[] = [];
     var count = 0;
     var running = 0;
 
     var sem = new coroutine.Semaphore(maxsize);
-    var clearTimer;
+    var clearTimer: Class_Timer;
 
     function clearPool() {
-        var c;
+        var c: FibPoolUnit;
         var d = new Date().getTime();
 
         while (count) {
@@ -63,7 +66,7 @@ module.exports = (opt, maxsize, timeout) => {
 
     }
 
-    function putback(name, o, e) {
+    function putback(name: FibPoolInnerJobName, o: FibPoolPayloadObject, e?: FibPoolInnerErr) {
         for (var i = 0; i < jobs.length; i++) {
             var job = jobs[i];
             if (job.name === name) {
@@ -83,10 +86,10 @@ module.exports = (opt, maxsize, timeout) => {
             };
     }
 
-    function connect(name) {
-        var o;
+    function connect(name: string) {
+        var o: FibPoolPayloadObject;
         var cn = 0;
-        var err;
+        var err: FibPoolInnerErr;
 
         while (true) {
             try {
@@ -103,9 +106,10 @@ module.exports = (opt, maxsize, timeout) => {
         putback(name, o, err);
     }
 
-    var pool = (name, func) => {
-        if (util.isFunction(name)) {
-            func = name;
+    var pool: FibPoolSeed = (_name: string|Function, func: Function) => {
+        var name = _name as string;
+        if (util.isFunction(_name)) {
+            func = _name as Function;
             name = "";
         }
 
@@ -130,7 +134,7 @@ module.exports = (opt, maxsize, timeout) => {
         if (!p) {
             coroutine.start(connect, name);
 
-            var job = {
+            var job: FibPoolInnerJob = {
                 name: name,
                 ev: new coroutine.Event()
             };
@@ -157,7 +161,7 @@ module.exports = (opt, maxsize, timeout) => {
         }
 
         return r;
-    }
+    };
 
     pool.connections = () => {
         return count;
@@ -180,3 +184,5 @@ module.exports = (opt, maxsize, timeout) => {
 
     return pool;
 }
+
+export = Pool;

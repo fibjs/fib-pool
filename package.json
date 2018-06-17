@@ -2,7 +2,7 @@
     "name": "fib-pool",
     "version": "1.3.1",
     "description": "Generic resource pooling for fibjs",
-    "main": "index.js",
+    "main": "lib/index.js",
     "repository": "git://github.com/fibjs/fib-pool.git",
     "author": "Liu Hu <lion@9465.net>",
     "homepage": "https://github.com/fibjs/fib-pool",
@@ -13,12 +13,22 @@
         "fibjs"
     ],
     "scripts": {
+        "build": "fibjs build.js",
         "ci": "fibjs test.js"
     },
     "devDependencies": {
-        "@fibjs/ci": "^1.0.0"
+        "@fibjs/ci": "^1.1.3",
+        "@types/fibjs": "github:fibjs/fib-types#v1.0.6",
+        "fib-typify": "^0.1.2"
     },
     "ci": {
-        "type": "travis"
+        "type": "travis",
+        "version": [
+            "0.21.0",
+            "0.22.0",
+            "0.23.0",
+            "0.24.0",
+            "0.25.0"
+        ]
     }
 }
