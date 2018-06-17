@@ -3,7 +3,7 @@ test.setup();
 
 var coroutine = require("coroutine");
 
-var Pool = require("./index");
+var Pool = require("./lib");
 
 describe("pool", () => {
     it("run", () => {
