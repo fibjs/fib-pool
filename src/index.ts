@@ -1,9 +1,9 @@
 import coroutine = require('coroutine');
 import util = require('util');
-import { FibPoolInnerErr, FibPoolOptsArg, FibPoolOptionResult, FibPoolInnerJobName, FibPoolPayloadObject, FibPoolUnit, FibPoolInnerJob, FibPool, FibPoolSeed, FibPoolObjectToExtract } from '../@types';
+import { FibPoolInnerErr, FibPoolOptsArg, FibPoolOptionResult, FibPoolInnerJobName, FibPoolPayloadObject, FibPoolUnit, FibPoolInnerJob, FibPool, FibPoolSeed, FibPoolObjectToExtract, _FibPool } from '../@types';
 import { setInterval } from 'timers';
 
-function Pool (_opt: FibPoolOptsArg, maxsize: number, timeout: number): FibPool {
+const Pool: _FibPool = function (_opt: FibPoolOptsArg, maxsize: number, timeout: number): FibPool {
     var opt: FibPoolOptionResult = _opt as FibPoolOptionResult;
     if (util.isFunction(_opt)) {
         opt = {

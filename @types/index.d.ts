@@ -44,7 +44,7 @@ interface FibPoolInnerJob {
 }
 type FibPoolInnerErr = any
 
-interface FibPoolSeed extends Function {
+interface FibPoolSeed<DippedItem = any> extends FibPool<DippedItem> {
     connections?(): number;
     info?(): FibPoolInfo; 
     clear?(): void;
@@ -55,11 +55,16 @@ interface FibPoolObjectToExtract {
     dispose?: Function;
 }
 
-interface FibPool extends Function {
+interface FibPoolDipperFn<DippedItem> {
+    (o: DippedItem): DippedItem
 }
 
-interface _FibPool {
-    (opt: FibPoolOptsArg, maxsize: number, timeout: number): FibPool
+interface FibPool<DippedItem = any> {
+    (name: string|FibPoolDipperFn<DippedItem>, o?: FibPoolDipperFn<DippedItem>): DippedItem
+}
+
+interface _FibPool<DippedItem = any> {
+    (opt: FibPoolOptsArg, maxsize: number, timeout: number): FibPool<DippedItem>
 }
 
 declare module "fib-pool" {
