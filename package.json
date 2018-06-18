@@ -1,8 +1,9 @@
 {
     "name": "fib-pool",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "description": "Generic resource pooling for fibjs",
     "main": "lib/index.js",
+    "types": "@types/index.d.ts",
     "repository": "git://github.com/fibjs/fib-pool.git",
     "author": "Liu Hu <lion@9465.net>",
     "homepage": "https://github.com/fibjs/fib-pool",
