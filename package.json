@@ -6,6 +6,12 @@
     "types": "@types/index.d.ts",
     "repository": "git://github.com/fibjs/fib-pool.git",
     "author": "Liu Hu <lion@9465.net>",
+    "contributors": [
+        {
+            "name": "Richard",
+            "email": "richardo2016@gmail.com"
+        }
+    ],
     "homepage": "https://github.com/fibjs/fib-pool",
     "license": "MIT",
     "keywords": [
@@ -18,18 +24,20 @@
         "ci": "fibjs test.js"
     },
     "devDependencies": {
-        "@fibjs/ci": "^2.0.0",
-        "@types/fibjs": "github:fibjs/fib-types#v1.0.6",
-        "fib-typify": "^0.1.2"
+        "@fibjs/ci": "^2.1.0",
+        "@types/fibjs": "^0.26.5",
+        "fib-typify": "^0.5.0"
     },
     "ci": {
-        "type": "travis",
+        "type": "travis, appveyor",
         "version": [
             "0.21.0",
             "0.22.0",
             "0.23.0",
             "0.24.0",
-            "0.25.0"
+            "0.25.0",
+            "0.26.0",
+            "0.26.1"
         ]
     }
 }

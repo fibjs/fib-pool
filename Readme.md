@@ -1,7 +1,8 @@
 ## Generic resource pooling for fibjs
 
-[![Build Status](https://travis-ci.org/fibjs/fib-pool.svg)](https://travis-ci.org/fibjs/fib-pool)
 [![NPM version](https://img.shields.io/npm/v/fib-pool.svg)](https://www.npmjs.org/package/fib-pool)
+[![Build Status](https://travis-ci.org/fibjs/fib-pool.svg)](https://travis-ci.org/fibjs/fib-pool)
+[![Build status](https://ci.appveyor.com/api/projects/status/p662f7ulpc4asu8s?svg=true)](https://ci.appveyor.com/project/richardo2016/fib-pool)
 
 ## Install
 
