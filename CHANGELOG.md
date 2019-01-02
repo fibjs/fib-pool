@@ -1,7 +1,14 @@
 
-v1.5.0 / 2019-01-02
+v1.5.1 / 2019-01-02
 ==================
 
+  * release extra fiber resource when pool callback throw error.
+  * mv test.js to test/index.js; refactor npm script 'build'.
+
+v1.5.0 / 2019-01-02
+===================
+
+  * Release v1.5.0
   * remove dist.
   * normalize types, remove dist.
   * upgrade dependencies and ci config.
