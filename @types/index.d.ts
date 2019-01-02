@@ -43,7 +43,7 @@ declare namespace FibPoolNS {
         // Error
         e?: FibPoolInnerErr;
     }
-    type FibPoolInnerErr = any
+    type FibPoolInnerErr = Error;
 
     interface FibPoolFunction<DippedItem = any> {
         (name: string|FibPoolDipperFn<DippedItem>, o?: FibPoolDipperFn<DippedItem>): DippedItem

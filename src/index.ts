@@ -64,7 +64,6 @@ const Pool: FibPoolNS.FibPoolGenerator = function (_opt: FibPoolNS.FibPoolOptsAr
             }
         } else if (!clearTimer)
             clearTimer = setInterval(clearPool, tm);
-
     }
 
     function putback(name: FibPoolNS.FibPoolInnerJobName, o: FibPoolNS.FibPoolPayloadObject, e?: FibPoolNS.FibPoolInnerErr) {
@@ -142,8 +141,10 @@ const Pool: FibPoolNS.FibPoolGenerator = function (_opt: FibPoolNS.FibPoolOptsAr
             jobs.push(job);
 
             job.ev.wait();
-            if (job.e)
+            if (job.e) {
+                sem.post();
                 throw job.e;
+            }
             o = job.o;
         }
 
