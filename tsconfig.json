@@ -3,7 +3,6 @@
         "target": "es6",
         "module": "commonjs",
         "alwaysStrict": false,
-        "removeComments": true,
-        "inlineSourceMap": true
+        "removeComments": true
     }
 }

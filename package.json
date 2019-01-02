@@ -20,8 +20,8 @@
         "fibjs"
     ],
     "scripts": {
-        "build": "fibjs build.js",
-        "test": "fibjs test.js",
+        "build": "fib-typify src -o lib",
+        "test": "fibjs test",
         "ci": "npm run build && npm run test"
     },
     "devDependencies": {
