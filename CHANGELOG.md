@@ -1,8 +1,18 @@
 
-v1.4.1 / 2018-06-19
+v1.5.0 / 2019-01-02
 ==================
 
+  * remove dist.
+  * normalize types, remove dist.
+  * upgrade dependencies and ci config.
+  * Merge pull request #9 from richardo2016/master
+
+v1.4.1 / 2018-06-19
+===================
+
+  * Release v1.4.1
   * add 'types' field to package.json
+  * Merge pull request #8 from richardo2016/master
 
 v1.4.0 / 2018-06-17
 ===================
