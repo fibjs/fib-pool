@@ -1,20 +1,21 @@
+/// <reference path="../@types/index.d.ts" />
+
 import coroutine = require('coroutine');
 import util = require('util');
-import { FibPoolInnerErr, FibPoolOptsArg, FibPoolOptionResult, FibPoolInnerJobName, FibPoolPayloadObject, FibPoolUnit, FibPoolInnerJob, FibPool, FibPoolSeed, FibPoolObjectToExtract, _FibPool } from '../@types';
 import { setInterval } from 'timers';
 
-const Pool: _FibPool = function (_opt: FibPoolOptsArg, maxsize: number, timeout: number): FibPool {
-    var opt: FibPoolOptionResult = _opt as FibPoolOptionResult;
+const Pool: FibPoolNS.FibPoolGenerator = function (_opt: FibPoolNS.FibPoolOptsArg, maxsize: number, timeout: number): FibPoolNS.FibPoolFunction {
+    var opt: FibPoolNS.FibPoolOptionResult = _opt as FibPoolNS.FibPoolOptionResult;
     if (util.isFunction(_opt)) {
         opt = {
             create: _opt,
             maxsize: maxsize,
             timeout: timeout
-        } as FibPoolOptionResult;
+        } as FibPoolNS.FibPoolOptionResult;
     }
 
     var create = opt.create;
-    var destroy = opt.destroy || ((o: FibPoolObjectToExtract) => {
+    var destroy = opt.destroy || ((o: FibPoolNS.FibPoolObjectToExtract) => {
         if (util.isFunction(o.close))
             o.close();
         if (util.isFunction(o.destroy))
@@ -31,8 +32,8 @@ const Pool: _FibPool = function (_opt: FibPoolOptsArg, maxsize: number, timeout:
 
     var retry = opt.retry || 1;
 
-    var pools: FibPoolUnit[] = [];
-    var jobs: FibPoolInnerJob[] = [];
+    var pools: FibPoolNS.FibPoolUnit[] = [];
+    var jobs: FibPoolNS.FibPoolInnerJob[] = [];
     var count = 0;
     var running = 0;
 
@@ -40,7 +41,7 @@ const Pool: _FibPool = function (_opt: FibPoolOptsArg, maxsize: number, timeout:
     var clearTimer: Class_Timer;
 
     function clearPool() {
-        var c: FibPoolUnit;
+        var c: FibPoolNS.FibPoolUnit;
         var d = new Date().getTime();
 
         while (count) {
@@ -66,7 +67,7 @@ const Pool: _FibPool = function (_opt: FibPoolOptsArg, maxsize: number, timeout:
 
     }
 
-    function putback(name: FibPoolInnerJobName, o: FibPoolPayloadObject, e?: FibPoolInnerErr) {
+    function putback(name: FibPoolNS.FibPoolInnerJobName, o: FibPoolNS.FibPoolPayloadObject, e?: FibPoolNS.FibPoolInnerErr) {
         for (var i = 0; i < jobs.length; i++) {
             var job = jobs[i];
             if (job.name === name) {
@@ -87,9 +88,9 @@ const Pool: _FibPool = function (_opt: FibPoolOptsArg, maxsize: number, timeout:
     }
 
     function connect(name: string) {
-        var o: FibPoolPayloadObject;
+        var o: FibPoolNS.FibPoolPayloadObject;
         var cn = 0;
-        var err: FibPoolInnerErr;
+        var err: FibPoolNS.FibPoolInnerErr;
 
         while (true) {
             try {
@@ -106,7 +107,7 @@ const Pool: _FibPool = function (_opt: FibPoolOptsArg, maxsize: number, timeout:
         putback(name, o, err);
     }
 
-    var pool: FibPoolSeed = (_name: string|Function, func: Function) => {
+    var pool: FibPoolNS.FibPoolFunction = (_name: string|Function, func: Function) => {
         var name = _name as string;
         if (util.isFunction(_name)) {
             func = _name as Function;
@@ -134,7 +135,7 @@ const Pool: _FibPool = function (_opt: FibPoolOptsArg, maxsize: number, timeout:
         if (!p) {
             coroutine.start(connect, name);
 
-            var job: FibPoolInnerJob = {
+            var job: FibPoolNS.FibPoolInnerJob = {
                 name: name,
                 ev: new coroutine.Event()
             };
