@@ -16,7 +16,14 @@ declare namespace FibPoolNS {
     interface FibPoolOptionDestoryor {
         (): void;
     }
-    type FibPoolRetryCountType = number
+    type FibPoolRetryCountType = number | boolean
+    interface FibPoolOptionArgs {
+        create?: FibPoolOptionCreator
+        destroy?: FibPoolOptionDestoryor
+        maxsize?: number
+        timeout?: number
+        retry?: FibPoolRetryCountType
+    }
     interface FibPoolOptionResult {
         create: FibPoolOptionCreator
         destroy: FibPoolOptionDestoryor
@@ -24,10 +31,7 @@ declare namespace FibPoolNS {
         timeout: number
         retry: FibPoolRetryCountType
     }
-    interface FibPoolOptionGenerator {
-        (): FibPoolOptionResult;
-    }
-    type FibPoolOptsArg = FibPoolOptionResult | FibPoolOptionCreator
+    type FibPoolOptsArg = FibPoolOptionArgs | FibPoolOptionCreator
 
     type FibPoolPayloadObject = object
     interface FibPoolUnit {
@@ -45,8 +49,14 @@ declare namespace FibPoolNS {
     }
     type FibPoolInnerErr = Error;
 
-    interface FibPoolFunction<DippedItem = any> {
-        (name: string|FibPoolDipperFn<DippedItem>, o?: FibPoolDipperFn<DippedItem>): DippedItem
+    interface FibPoolDipperFn<DippedItem = any, RETURN_TYPE = any> {
+        (o: DippedItem): RETURN_TYPE
+    }
+    type FibPoolCallback<T = any, T2 = any> = FibPoolDipperFn<T, T2>
+
+    interface FibPoolFunction<DippedItem = any, RETURN_TYPE = any> {
+        (name: string, o: FibPoolCallback<DippedItem, RETURN_TYPE>): RETURN_TYPE
+        (o: FibPoolCallback<DippedItem, RETURN_TYPE>): RETURN_TYPE
         connections?(): number;
         info?(): FibPoolInfo; 
         clear?(): void;
@@ -57,12 +67,8 @@ declare namespace FibPoolNS {
         dispose?: Function;
     }
 
-    interface FibPoolDipperFn<DippedItem> {
-        (o: DippedItem): DippedItem
-    }
-
     interface FibPoolGenerator<DippedItem = any> {
-        (opt: FibPoolOptsArg, maxsize: number, timeout: number): FibPoolNS.FibPoolFunction<DippedItem>
+        (opt: FibPoolOptsArg, maxsize?: number, timeout?: number): FibPoolNS.FibPoolFunction<DippedItem>
     }
 }
 

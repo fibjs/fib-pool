@@ -4,7 +4,7 @@ import coroutine = require('coroutine');
 import util = require('util');
 import { setInterval } from 'timers';
 
-const Pool: FibPoolNS.FibPoolGenerator = function (_opt: FibPoolNS.FibPoolOptsArg, maxsize: number, timeout: number): FibPoolNS.FibPoolFunction {
+const Pool: FibPoolNS.FibPoolGenerator = function (_opt: FibPoolNS.FibPoolOptsArg, maxsize?: number, timeout?: number): FibPoolNS.FibPoolFunction {
     var opt: FibPoolNS.FibPoolOptionResult = _opt as FibPoolNS.FibPoolOptionResult;
     if (util.isFunction(_opt)) {
         opt = {
@@ -106,10 +106,13 @@ const Pool: FibPoolNS.FibPoolGenerator = function (_opt: FibPoolNS.FibPoolOptsAr
         putback(name, o, err);
     }
 
-    var pool: FibPoolNS.FibPoolFunction = (_name: string|Function, func: Function) => {
+    var pool: FibPoolNS.FibPoolFunction = (...args: any[]) => {
+        var _name: string|FibPoolNS.FibPoolCallback = args[0]
+        var func: FibPoolNS.FibPoolCallback = args[1]
+
         var name = _name as string;
         if (util.isFunction(_name)) {
-            func = _name as Function;
+            func = _name as FibPoolNS.FibPoolCallback;
             name = "";
         }
 
