@@ -1,7 +1,14 @@
 
-v1.5.1 / 2019-01-02
+v1.5.2 / 2019-01-05
 ==================
 
+  * typo fix
+  * add npm script for hooking publish.
+
+v1.5.1 / 2019-01-02
+===================
+
+  * Release v1.5.1
   * release extra fiber resource when pool callback throw error.
   * mv test.js to test/index.js; refactor npm script 'build'.
 
