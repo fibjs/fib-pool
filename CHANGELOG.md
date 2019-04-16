@@ -1,7 +1,13 @@
 
-v1.5.2 / 2019-01-05
+v1.5.3 / 2019-04-16
 ==================
 
+  * typo robust.
+
+v1.5.2 / 2019-01-05
+===================
+
+  * Release v1.5.2
   * typo fix
   * add npm script for hooking publish.
 
