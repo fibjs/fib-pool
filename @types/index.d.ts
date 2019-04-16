@@ -10,16 +10,16 @@ declare namespace FibPoolNS {
         timeout: number;
     }
 
-    interface FibPoolOptionCreator {
-        (name: string): FibPoolPayloadObject;
+    interface FibPoolOptionCreator<T = FibPoolPayloadObject> {
+        (name: string): T;
     }
-    interface FibPoolOptionDestoryor {
-        (): void;
+    interface FibPoolOptionDestoryor<T = any> {
+        (item?: T): void;
     }
     type FibPoolRetryCountType = number | boolean
-    interface FibPoolOptionArgs {
+    interface FibPoolOptionArgs<T = any> {
         create?: FibPoolOptionCreator
-        destroy?: FibPoolOptionDestoryor
+        destroy?: FibPoolOptionDestoryor<T>
         maxsize?: number
         timeout?: number
         retry?: FibPoolRetryCountType
@@ -33,28 +33,28 @@ declare namespace FibPoolNS {
     }
     type FibPoolOptsArg = FibPoolOptionArgs | FibPoolOptionCreator
 
-    type FibPoolPayloadObject = object
-    interface FibPoolUnit {
-        o: FibPoolPayloadObject;
+    type FibPoolPayloadObject = any
+    interface FibPoolUnit<T = FibPoolPayloadObject> {
+        o: T;
         name: string;
         time: Date;
     }
     type FibPoolInnerJobName = string;
-    interface FibPoolInnerJob {
+    interface FibPoolInnerJob<T = FibPoolPayloadObject> {
         name: FibPoolInnerJobName;
         ev: Class_Event;
-        o?:FibPoolPayloadObject;
+        o?: T;
         // Error
         e?: FibPoolInnerErr;
     }
     type FibPoolInnerErr = Error;
 
-    interface FibPoolDipperFn<DippedItem = any, RETURN_TYPE = any> {
+    interface FibPoolDipperFn<DippedItem = FibPoolPayloadObject, RETURN_TYPE = any> {
         (o: DippedItem): RETURN_TYPE
     }
     type FibPoolCallback<T = any, T2 = any> = FibPoolDipperFn<T, T2>
 
-    interface FibPoolFunction<DippedItem = any, RETURN_TYPE = any> {
+    interface FibPoolFunction<DippedItem = FibPoolPayloadObject, RETURN_TYPE = any> {
         (name: string, o: FibPoolCallback<DippedItem, RETURN_TYPE>): RETURN_TYPE
         (o: FibPoolCallback<DippedItem, RETURN_TYPE>): RETURN_TYPE
         connections?(): number;
@@ -62,17 +62,14 @@ declare namespace FibPoolNS {
         clear?(): void;
     }
     interface FibPoolObjectToExtract {
-        close?: Function;
-        destroy?: Function;
-        dispose?: Function;
+        close?: FibPoolOptionResult['destroy'] | Function;
+        destroy?: FibPoolOptionResult['destroy'] | Function;
+        dispose?: FibPoolOptionResult['destroy'] | Function;
     }
 
-    interface FibPoolGenerator<DippedItem = any> {
-        (opt: FibPoolOptsArg, maxsize?: number, timeout?: number): FibPoolNS.FibPoolFunction<DippedItem>
-    }
+    function FibPoolGenerator<DippedItem = FibPoolPayloadObject> (opt: FibPoolOptsArg, maxsize?: number, timeout?: number): FibPoolNS.FibPoolFunction<DippedItem>;
 }
 
 declare module "fib-pool" {
-    const mod: FibPoolNS.FibPoolGenerator
-    export = mod
+    export = FibPoolNS.FibPoolGenerator
 }
