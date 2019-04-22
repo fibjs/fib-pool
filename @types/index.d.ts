@@ -1,4 +1,4 @@
-/// <reference types="fibjs" />
+/// <reference types="@fibjs/types" />
 
 declare namespace FibPoolNS {
     interface FibPoolInfo {
