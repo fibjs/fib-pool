@@ -401,6 +401,36 @@ describe("pool", () => {
 
         assert.equal(p.info().count, 0);
     });
+
+    it("throw real error", () => {
+        var called = false;
+        var destroyed = false;
+
+        var p = Pool({
+            create: () => {
+                return 100;
+            },
+            destroy: (o) => {
+                destroyed = true;
+            }
+        });
+
+        try {
+            p((v) => {
+                throw "error";
+            });
+        } catch (error) {
+            called = true
+            assert.isObject(error)
+            assert.equal(error.message, 'error')
+        }
+
+        assert.isTrue(called);
+
+        assert.isFalse(destroyed);
+        coroutine.sleep(10);
+        assert.isTrue(destroyed);
+    });
 });
 
 process.exit(test.run(console.DEBUG));

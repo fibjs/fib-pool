@@ -4,6 +4,13 @@ import coroutine = require('coroutine');
 import util = require('util');
 import { setInterval } from 'timers';
 
+function ensureError (e: string | Error) {
+    if (typeof e === 'string')
+        e = new Error(e)
+   
+   return e
+}
+
 const Pool = function<T1, T2> (_opt: FibPoolNS.FibPoolOptsArg, maxsize?: number, timeout?: number): FibPoolNS.FibPoolFunction<T1, T2> {
     var opt: FibPoolNS.FibPoolOptionResult = _opt as FibPoolNS.FibPoolOptionResult;
     if (util.isFunction(_opt)) {
@@ -66,7 +73,12 @@ const Pool = function<T1, T2> (_opt: FibPoolNS.FibPoolOptsArg, maxsize?: number,
             clearTimer = setInterval(clearPool, tm);
     }
 
-    function putback(name: FibPoolNS.FibPoolInnerJobName, o: FibPoolNS.FibPoolPayloadObject, e?: FibPoolNS.FibPoolInnerErr) {
+    function putback(
+        name: FibPoolNS.FibPoolInnerJobName,
+        o: FibPoolNS.FibPoolPayloadObject,
+        e?: FibPoolNS.FibPoolInnerErr
+    ) {
+        e = ensureError(e);
         for (var i = 0; i < jobs.length; i++) {
             var job = jobs[i];
             if (job.name === name) {
@@ -146,7 +158,7 @@ const Pool = function<T1, T2> (_opt: FibPoolNS.FibPoolOptsArg, maxsize?: number,
             job.ev.wait();
             if (job.e) {
                 sem.post();
-                throw job.e;
+                throw ensureError(job.e);
             }
             o = job.o;
         }
@@ -158,7 +170,7 @@ const Pool = function<T1, T2> (_opt: FibPoolNS.FibPoolOptsArg, maxsize?: number,
         } catch (e) {
             if (o !== undefined)
                 coroutine.start(destroy, o);
-            throw e;
+            throw ensureError(e);
         } finally {
             running--;
             sem.post();
