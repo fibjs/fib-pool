@@ -1,7 +1,15 @@
 
-v1.5.3 / 2019-04-16
+v1.5.4 / 2019-08-03
 ==================
 
+  * make sure throwing real Error if error occured in job.
+  * ci: add fibjs "0.27.0" ci config
+  * use @fibjs/types
+
+v1.5.3 / 2019-04-16
+===================
+
+  * Release v1.5.3
   * typo robust.
 
 v1.5.2 / 2019-01-05
