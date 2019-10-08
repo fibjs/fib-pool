@@ -1,6 +1,6 @@
 {
     "name": "fib-pool",
-    "version": "1.5.4",
+    "version": "1.6.0",
     "description": "Generic resource pooling for fibjs",
     "main": "./lib",
     "types": "@types/index.d.ts",
