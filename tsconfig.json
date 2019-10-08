@@ -3,6 +3,10 @@
         "target": "es6",
         "module": "commonjs",
         "alwaysStrict": false,
-        "removeComments": true
+        "removeComments": true,
+        "typeRoots": [
+            "node_modules",
+            "types"
+        ]
     }
 }
