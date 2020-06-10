@@ -3,7 +3,7 @@
     "version": "1.6.0",
     "description": "Generic resource pooling for fibjs",
     "main": "./lib",
-    "types": "@types/index.d.ts",
+    "types": "typings/index.d.ts",
     "repository": "git://github.com/fibjs/fib-pool.git",
     "author": "Liu Hu <lion@9465.net>",
     "contributors": [
@@ -20,7 +20,7 @@
         "fibjs"
     ],
     "scripts": {
-        "build": "fib-typify src -o lib",
+        "build": "ftsc ./src/* --outDir lib",
         "test": "fibjs test",
         "ci": "npm run build && npm run test",
         "prepublishOnly": "npm run build"
@@ -28,7 +28,7 @@
     "devDependencies": {
         "@fibjs/ci": "^2.3.0",
         "@fibjs/types": "^0.27.1",
-        "fib-typify": "^0.6.0"
+        "fib-typify": "^0.8.4"
     },
     "ci": {
         "type": "travis, appveyor",
@@ -40,7 +40,10 @@
             "0.25.0",
             "0.26.0",
             "0.26.1",
-            "0.27.0"
+            "0.27.0",
+            "0.28.0",
+            "0.29.0",
+            "0.30.0"
         ]
     }
 }

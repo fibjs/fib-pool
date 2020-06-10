@@ -26,6 +26,15 @@ matrix:
     - os: linux
       env:
         - VERSION=0.27.0
+    - os: linux
+      env:
+        - VERSION=0.28.0
+    - os: linux
+      env:
+        - VERSION=0.29.0
+    - os: linux
+      env:
+        - VERSION=0.30.0
     - os: osx
       osx_image: xcode9
       env:
@@ -58,6 +67,18 @@ matrix:
       osx_image: xcode9
       env:
         - VERSION=0.27.0
+    - os: osx
+      osx_image: xcode9
+      env:
+        - VERSION=0.28.0
+    - os: osx
+      osx_image: xcode9
+      env:
+        - VERSION=0.29.0
+    - os: osx
+      osx_image: xcode9
+      env:
+        - VERSION=0.30.0
 before_install:
   - OS=linux
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then

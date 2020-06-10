@@ -4,9 +4,10 @@
         "module": "commonjs",
         "alwaysStrict": false,
         "removeComments": true,
-        "typeRoots": [
-            "node_modules",
-            "types"
+        "declaration": true,
+        "declarationDir": "typings",
+        "types": [
+            "@fibjs/types"
         ]
     }
 }
