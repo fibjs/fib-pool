@@ -11,6 +11,7 @@ declare namespace FibPoolNS {
         maxsize?: number;
         timeout?: number;
         retry?: number | boolean;
+        strict?: boolean;
     }
     interface FibPoolOptionResult<T extends DippedItemStruct = {}> {
         create: FibPoolOptionArgs<T>['create'];
@@ -18,6 +19,7 @@ declare namespace FibPoolNS {
         maxsize: FibPoolOptionArgs<T>['maxsize'];
         timeout: FibPoolOptionArgs<T>['timeout'];
         retry: FibPoolOptionArgs<T>['retry'];
+        strict: FibPoolOptionArgs<T>['strict'];
     }
     interface FibPoolDipperFn<T_CREATED_ITEM, T_POOL_FUNC_RETURN = any> {
         (o: T_CREATED_ITEM): T_POOL_FUNC_RETURN;

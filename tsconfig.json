@@ -4,10 +4,14 @@
         "module": "commonjs",
         "alwaysStrict": false,
         "removeComments": true,
-        "declaration": true,
-        "declarationDir": "typings",
+        "noEmit": true,
         "types": [
             "@fibjs/types"
         ]
-    }
+    },
+    "exclude": [
+        "test",
+        "typings",
+        "node_modules"
+    ]
 }

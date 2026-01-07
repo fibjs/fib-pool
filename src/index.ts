@@ -1,5 +1,5 @@
-import coroutine = require('coroutine');
-import util = require('util');
+import * as coroutine from 'coroutine';
+import * as util from 'util';
 
 declare namespace FibPoolNS {
     type FirstParameter<T> = T extends (arg: infer T, ...args: any[]) => any ? T : never; 
@@ -16,6 +16,7 @@ declare namespace FibPoolNS {
         maxsize?: number
         timeout?: number
         retry?: number | boolean
+        strict?: boolean
     }
     interface FibPoolOptionResult<T extends DippedItemStruct = {}> {
         create: FibPoolOptionArgs<T>['create']
@@ -23,6 +24,7 @@ declare namespace FibPoolNS {
         maxsize: FibPoolOptionArgs<T>['maxsize']
         timeout: FibPoolOptionArgs<T>['timeout']
         retry: FibPoolOptionArgs<T>['retry']
+        strict: FibPoolOptionArgs<T>['strict']
     }
 
     interface FibPoolDipperFn<T_CREATED_ITEM, T_POOL_FUNC_RETURN = any> {
@@ -52,7 +54,7 @@ function ensureError (e: string | Error) {
    return e
 }
 
-export = function GetPool<
+export default function GetPool<
     T_CREATED_ITEM extends FibPoolNS.DippedItemStruct,
     T_POOL_FUNC_RETURN
 > (
@@ -88,6 +90,7 @@ export = function GetPool<
         tm = 10;
 
     const retry = opt.retry || 1;
+    const _strict = opt.strict === undefined ? true : opt.strict;
     /* clean input arguments :end */
 
     let pools = <{
@@ -170,7 +173,7 @@ export = function GetPool<
                 o = create(name);
                 break;
             } catch (e) {
-                if (++cn >= retry) {
+                if (++cn >= (retry as number)) {
                     err = e;
                     break;
                 }
@@ -226,11 +229,32 @@ export = function GetPool<
 
         running++;
         try {
-            r = func(o);
+            const po = (_strict && typeof o === 'object') ? new Proxy({}, {
+                get: function (target, prop) {
+                    if (prop === 'close' || prop === 'destroy' || prop === 'dispose')
+                        throw new Error("Cannot close/destroy/dispose");
+                    if (o === undefined)
+                        throw new Error("access object outside of pool scope");
+                    const value = o[prop];
+                    if (typeof value === 'function') {
+                        return function () {
+                            return value.apply(o, arguments);
+                        }
+                    }
+                    return value;
+                },
+                set: function (target, prop, value) {
+                    throw new Error("Cannot set property");
+                }
+            }) as any : o;
+
+            r = func(po as T_CREATED_ITEM);
             putback(name, o);
+            o = undefined;
         } catch (e) {
             if (o !== undefined)
                 coroutine.start(destroy, o);
+            o = undefined;
             throw ensureError(e);
         } finally {
             running--;

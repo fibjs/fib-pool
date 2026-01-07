@@ -103,6 +103,45 @@ var res = p("test", (conn) => {
 
 ```
 
+## Strict mode (default: enabled)
+
+By default, the pool uses strict mode to prevent accessing pooled objects outside of the callback function. This helps prevent resource leaks and ensures proper resource management.
+
+```js
+var Pool = require("fib-pool");
+
+var p = Pool({
+    create: () => {
+        return { value: 1, getValue: function() { return this.value; } };
+    }
+});
+
+var leaked;
+p((obj) => {
+    leaked = obj;
+    // This works inside the pool callback
+    console.log(obj.getValue()); // OK
+});
+
+// This will throw an error: "access object outside of pool scope"
+leaked.getValue(); // Error!
+```
+
+When strict mode is enabled, it also prevents:
+- Setting properties on pooled objects
+- Calling `close()`, `destroy()`, or `dispose()` methods directly
+
+To disable strict mode:
+
+```js
+var p = Pool({
+    create: () => {
+        return { value: 1 };
+    },
+    strict: false
+});
+```
+
 ## Clear a pool
 
 Simple example.

@@ -1,15 +1,24 @@
-var test = require("test");
-test.setup();
+import { describe, it, afterEach } from "node:test";
+import assert from "assert";
+import coroutine from "coroutine";
 
-var coroutine = require("coroutine");
-
-var Pool = require("../lib");
+import Pool from "../src";
 
 describe("pool", () => {
+    const pools = [];
+
+    afterEach(() => {
+        for (const p of pools) {
+            p.clear();
+        }
+        pools.length = 0;
+    });
+
     it("run", () => {
         var p = Pool(() => {
             return 10;
         });
+        pools.push(p);
 
         assert.equal(p((v) => {
             return v + 1;
@@ -24,6 +33,7 @@ describe("pool", () => {
             n++;
             return n;
         });
+        pools.push(p);
 
         assert.equal(p((v) => {
             running = p.info().running;
@@ -42,6 +52,7 @@ describe("pool", () => {
             // n++;
             return n;
         }, 10);
+        pools.push(p);
 
         coroutine.parallel(() => {
             p((c) => {
@@ -63,6 +74,7 @@ describe("pool", () => {
             n++;
             return name;
         });
+        pools.push(p);
 
         assert.equal(n, 0);
 
@@ -93,6 +105,7 @@ describe("pool", () => {
             n++;
             return n;
         });
+        pools.push(p);
 
         assert.equal(p((v) => {
             return v + 1;
@@ -123,6 +136,7 @@ describe("pool", () => {
                 called = true;
             }
         });
+        pools.push(p);
 
         assert.throws(() => {
             p((v) => {
@@ -147,6 +161,7 @@ describe("pool", () => {
                 };
             }
         });
+        pools.push(p);
 
         assert.throws(() => {
             p((v) => {
@@ -171,6 +186,7 @@ describe("pool", () => {
                 };
             }
         });
+        pools.push(p);
 
         assert.throws(() => {
             p((v) => {
@@ -193,6 +209,7 @@ describe("pool", () => {
                 }
             }
         })
+        pools.push(p);
 
         assert.throws(() => {
             p((v) => {
@@ -215,6 +232,7 @@ describe("pool", () => {
                 };
             }
         });
+        pools.push(p);
 
         assert.throws(() => {
             p((v) => {
@@ -239,6 +257,7 @@ describe("pool", () => {
             },
             timeout: 10
         });
+        pools.push(p);
 
         p((v) => {});
 
@@ -256,6 +275,7 @@ describe("pool", () => {
             n++;
             throw "open error";
         });
+        pools.push(p);
 
         assert.throws(() => {
             p((v) => {});
@@ -271,6 +291,7 @@ describe("pool", () => {
             },
             retry: 10
         });
+        pools.push(p1);
 
         assert.throws(() => {
             p1((v) => {});
@@ -288,6 +309,7 @@ describe("pool", () => {
             },
             retry: 10
         });
+        pools.push(p2);
 
         p2((v) => {});
 
@@ -305,6 +327,7 @@ describe("pool", () => {
                 return called;
             }
         });
+        pools.push(p);
 
         var cs = [];
         coroutine.parallel([0, 1, 2, 3, 4], n => {
@@ -333,6 +356,7 @@ describe("pool", () => {
                 return called;
             }
         });
+        pools.push(p);
 
         var cs = [];
         coroutine.parallel([0, 1, 2, 3, 4], n => {
@@ -359,6 +383,7 @@ describe("pool", () => {
             },
             maxsize: maxsize
         });
+        pools.push(p);
 
         coroutine.parallel(["a", "b", "c", "d"], n => {
             p((n) => {
@@ -387,6 +412,7 @@ describe("pool", () => {
             maxsize: maxsize,
             timeout: 60 * 1000
         });
+        pools.push(p);
 
         parallel(["a", "b", "c", "d"]);
 
@@ -414,6 +440,7 @@ describe("pool", () => {
                 destroyed = true;
             }
         });
+        pools.push(p);
 
         try {
             p((v) => {
@@ -431,6 +458,116 @@ describe("pool", () => {
         coroutine.sleep(10);
         assert.isTrue(destroyed);
     });
-});
 
-process.exit(test.run(console.DEBUG));
+    it("strict mode - proxy restrictions", () => {
+        var p = Pool({
+            create: () => ({
+                value: 1,
+                test: function() { return this.value; }
+            })
+        });
+        pools.push(p);
+
+        p(obj => {
+            // Test method access
+            assert.equal(obj.test(), 1);
+            
+            // Test property access restriction
+            assert.throws(() => {
+                obj.value = 2;
+            });
+
+            // Test close/destroy/dispose restriction
+            assert.throws(() => {
+                obj.close();
+            });
+            assert.throws(() => {
+                obj.destroy();
+            });
+            assert.throws(() => {
+                obj.dispose();
+            });
+        });
+    });
+
+    it("strict mode - access outside pool scope", () => {
+        var p = Pool({
+            create: () => ({
+                value: 1,
+                getValue: function() { return this.value; }
+            })
+        });
+        pools.push(p);
+
+        var leaked;
+        p(obj => {
+            leaked = obj;
+            // Should work inside pool scope
+            assert.equal(obj.getValue(), 1);
+        });
+
+        // Should fail outside pool scope
+        assert.throws(() => {
+            leaked.getValue();
+        }, /access object outside of pool scope/);
+    });
+
+    it("strict mode disabled", () => {
+        var p = Pool({
+            create: () => ({
+                value: 1,
+                test: function() { return this.value; }
+            }),
+            strict: false
+        });
+        pools.push(p);
+
+        var leaked;
+        p(obj => {
+            leaked = obj;
+            // Should work inside pool scope
+            assert.equal(obj.test(), 1);
+            
+            // Should allow property mutation when strict is false
+            obj.value = 2;
+            assert.equal(obj.value, 2);
+        });
+
+        // Should work outside pool scope when strict is false
+        assert.equal(leaked.test(), 2);
+    });
+
+    it("strict mode - access nested object properties", () => {
+        var p = Pool({
+            create: () => ({
+                driver: {
+                    name: "test-driver",
+                    execQuery: function(sql, ...params) {
+                        return { sql, params };
+                    },
+                    config: {
+                        timeout: 3000
+                    }
+                },
+                getValue: function() { return 100; }
+            })
+        });
+        pools.push(p);
+
+        p(conn => {
+            // Should be able to access nested objects
+            assert.equal(conn.driver.name, "test-driver");
+            
+            // Should be able to call methods on nested objects
+            const result = conn.driver.execQuery("SELECT * FROM table", "param1");
+            assert.equal(result.sql, "SELECT * FROM table");
+            assert.deepEqual(result.params, ["param1"]);
+            
+            // Should be able to access deeply nested properties
+            assert.equal(conn.driver.config.timeout, 3000);
+            
+            // Should still be able to call methods on the root object
+            assert.equal(conn.getValue(), 100);
+        });
+    });
+});
