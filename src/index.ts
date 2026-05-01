@@ -134,8 +134,11 @@ export default function GetPool<
                 clearTimer.clear();
                 clearTimer = null;
             }
-        } else if (!clearTimer)
+        } else if (!clearTimer) {
             clearTimer = setInterval(clearPool, tm);
+            if (clearTimer && typeof clearTimer.unref === 'function')
+                clearTimer.unref();
+        }
     }
 
     function putback(
