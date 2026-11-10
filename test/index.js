@@ -570,4 +570,313 @@ describe("pool", () => {
             assert.equal(conn.getValue(), 100);
         });
     });
+
+    it("strict mode - the guarded object reflects like the item", () => {
+        var p = Pool({
+            create: () => ({
+                value: 1,
+                label: "item",
+                getValue: function() { return this.value; }
+            })
+        });
+        pools.push(p);
+
+        p(obj => {
+            assert.isTrue('value' in obj);
+            assert.isTrue('getValue' in obj);
+            assert.isFalse('missing' in obj);
+
+            assert.deepEqual(Object.keys(obj).sort(), ['getValue', 'label', 'value']);
+            assert.deepEqual(
+                Object.entries(obj).filter(e => e[0] !== 'getValue').sort((a, b) => a[0] < b[0] ? -1 : 1),
+                [['label', 'item'], ['value', 1]]
+            );
+
+            var copied = {};
+            for (var key in obj)
+                copied[key] = obj[key];
+            assert.equal(copied.label, "item");
+
+            assert.deepEqual({ ...obj }.label, "item");
+        });
+    });
+
+    it("strict mode - JSON.stringify works on the guarded object", () => {
+        var p = Pool({
+            create: () => ({ value: 1, label: "item" })
+        });
+        pools.push(p);
+
+        assert.equal(p(obj => JSON.stringify(obj)), '{"value":1,"label":"item"}');
+    });
+
+    it("strict mode - an extracted method cannot reach the item after the scope", () => {
+        var p = Pool({
+            create: () => ({
+                value: 1,
+                getValue: function() { return this.value; }
+            })
+        });
+        pools.push(p);
+
+        var extracted;
+        p(obj => {
+            assert.equal(obj.getValue(), 1);
+            extracted = obj.getValue;
+        });
+
+        assert.throws(() => {
+            extracted();
+        }, /access object outside of pool scope/);
+    });
+
+    it("strict mode - non-object item is handed out as is", () => {
+        var p = Pool(() => 10);
+        pools.push(p);
+
+        assert.equal(p(v => v), 10);
+    });
+
+    it("null item is handed out and destroyed without failing", () => {
+        var created = 0;
+        var p = Pool({
+            create: () => {
+                created++;
+                return null;
+            },
+            timeout: 10
+        });
+        pools.push(p);
+
+        var got = "unset";
+        p((item) => {
+            got = item;
+        });
+
+        assert.equal(created, 1);
+        assert.isNull(got);
+
+        // the idle item is evicted through the default destroy, which must not
+        // touch null
+        coroutine.sleep(60);
+        assert.equal(p.connections(), 0);
+    });
+
+    it("undefined item is handed out and parked as is", () => {
+        var p = Pool({ create: () => undefined });
+        pools.push(p);
+
+        var ran = 0;
+        p((item) => {
+            ran++;
+            assert.isUndefined(item);
+        });
+
+        assert.equal(ran, 1);
+        assert.equal(p.connections(), 1);
+    });
+
+    it("create error that is not an Error object is normalized", () => {
+        var p = Pool({
+            create: () => {
+                throw 100;
+            }
+        });
+        pools.push(p);
+
+        assert.throws(() => {
+            p(() => {});
+        }, (error) => {
+            assert.isObject(error);
+            assert.isTrue(error instanceof Error);
+            assert.equal(error.message, '100');
+            return true;
+        });
+    });
+
+    it("falsy create error is not swallowed", () => {
+        [0, "", false, null, undefined].forEach((thrown) => {
+            var calls = 0;
+            var p = Pool({
+                create: () => {
+                    calls++;
+                    throw thrown;
+                }
+            });
+            pools.push(p);
+
+            assert.throws(() => {
+                p(() => {});
+            }, Error, `create throwing ${String(thrown)} must not be swallowed`);
+            assert.equal(calls, 1);
+        });
+    });
+
+    it("callback error that is not an Error object is normalized", () => {
+        var p = Pool(() => ({}));
+        pools.push(p);
+
+        assert.throws(() => {
+            p(() => {
+                throw 42;
+            });
+        }, (error) => {
+            assert.isTrue(error instanceof Error);
+            assert.equal(error.message, '42');
+            return true;
+        });
+    });
+
+    it("idle items never exceed maxsize", () => {
+        var destroyed = 0;
+        var p = Pool({
+            create: () => {
+                return { close() { destroyed++; } };
+            },
+            maxsize: 2
+        });
+        pools.push(p);
+
+        ['a', 'b', 'c', 'd', 'e'].forEach(name => p(name, () => {}));
+
+        assert.isTrue(p.connections() <= 2, `idle count ${p.connections()} must not exceed maxsize 2`);
+
+        // the evicted items are destroyed, not leaked
+        coroutine.sleep(20);
+        assert.equal(destroyed, 3);
+    });
+
+    it("idle items of one name still share the maxsize budget", () => {
+        var p = Pool({
+            create: () => ({}),
+            maxsize: 2
+        });
+        pools.push(p);
+
+        ['a', 'b', 'c'].forEach(name => p(name, () => {}));
+
+        assert.isTrue(p.connections() <= 2);
+    });
+
+    it("evicting an idle item destroys it", () => {
+        var destroyed = 0;
+        var p = Pool({
+            create: () => ({ close() { destroyed++; } }),
+            maxsize: 1
+        });
+        pools.push(p);
+
+        p('a', () => {});
+        p('b', () => {});
+
+        assert.equal(p.connections(), 1);
+        coroutine.sleep(20);
+        assert.equal(destroyed, 1);
+    });
+
+    it("the idle cap does not thrash on a small set of names", () => {
+        var created = 0;
+        var p = Pool({
+            create: () => {
+                created++;
+                return {};
+            },
+            maxsize: 2
+        });
+        pools.push(p);
+
+        for (var i = 0; i < 10; i++) {
+            p('a', () => {});
+            p('b', () => {});
+        }
+
+        assert.equal(created, 2);
+        assert.equal(p.connections(), 2);
+    });
+
+    it("nested acquisition from the same fiber throws instead of deadlocking", () => {
+        var p = Pool({
+            create: () => ({}),
+            maxsize: 1
+        });
+        pools.push(p);
+
+        assert.throws(() => {
+            p(() => {
+                p(() => {});
+            });
+        }, /Cannot pool again from the same fiber/);
+
+        // the guard is released even though the inner call threw
+        assert.equal(p(() => "ok"), "ok");
+        assert.equal(p.info().running, 0);
+    });
+
+    it("nested acquisition from the same fiber is refused even with spare capacity", () => {
+        var p = Pool({
+            create: () => ({ value: 1 }),
+            maxsize: 5
+        });
+        pools.push(p);
+
+        assert.throws(() => {
+            p((o) => {
+                return p((inner) => inner.value) + o.value;
+            });
+        }, /Cannot pool again from the same fiber/);
+
+        assert.equal(p(() => "ok"), "ok");
+    });
+
+    it("nested acquisition from another fiber is allowed", () => {
+        var p = Pool({
+            create: () => ({}),
+            maxsize: 2
+        });
+        pools.push(p);
+
+        var nested = "not run";
+        p(() => {
+            coroutine.start(() => {
+                nested = p(() => "inner");
+            });
+            coroutine.sleep(20);
+        });
+
+        assert.equal(nested, "inner");
+    });
+
+    it("maxsize is validated", () => {
+        [-1, 0, 1.5, NaN, "4", null, true].forEach((maxsize) => {
+            assert.throws(() => Pool({ create: () => ({}), maxsize }), /maxsize must be a positive integer/,
+                `maxsize ${String(maxsize)} must be rejected`);
+        });
+    });
+
+    it("timeout is validated", () => {
+        [-5, 0, NaN, "1000", null, true].forEach((timeout) => {
+            assert.throws(() => Pool({ create: () => ({}), timeout }), /timeout must be a positive number/,
+                `timeout ${String(timeout)} must be rejected`);
+        });
+    });
+
+    it("retry is validated", () => {
+        [0, -3, 1.5, true, false, "3", null].forEach((retry) => {
+            assert.throws(() => Pool({ create: () => ({}), retry }), /retry must be a positive integer/,
+                `retry ${String(retry)} must be rejected`);
+        });
+
+        // a number is accepted
+        var p = Pool({ create: () => ({}), retry: 3 });
+        pools.push(p);
+        assert.equal(p(() => "ok"), "ok");
+    });
+
+    it("omitted options fall back to the defaults", () => {
+        var p = Pool(() => ({}));
+        pools.push(p);
+
+        assert.equal(p.info().maxsize, 10);
+        assert.equal(p.info().timeout, 60000);
+    });
 });

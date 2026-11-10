@@ -1,17 +1,13 @@
 {
     "compilerOptions": {
-        "target": "es6",
+        // `fibjs --check` derives its default lib from the target: with es6
+        // that is lib.dom, which collides with the fibjs built-in types.
+        // es2020 is the lowest target whose default lib stays es-only.
+        "target": "es2020",
         "module": "commonjs",
-        "alwaysStrict": false,
-        "removeComments": true,
-        "noEmit": true,
-        "types": [
-            "@fibjs/types"
-        ]
+        "noEmit": true
     },
     "exclude": [
-        "test",
-        "typings",
         "node_modules"
     ]
 }
