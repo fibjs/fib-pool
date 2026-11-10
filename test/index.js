@@ -1,6 +1,7 @@
 import { describe, it, afterEach } from "node:test";
 import assert from "assert";
 import coroutine from "coroutine";
+import { createRequire } from "module";
 
 import Pool from "../src";
 
@@ -878,5 +879,33 @@ describe("pool", () => {
 
         assert.equal(p.info().maxsize, 10);
         assert.equal(p.info().timeout, 60000);
+    });
+
+    // `require('fib-pool')` must hand back the factory itself, not a module
+    // namespace object. The ESM implementation is bridged by src/index.cts.
+    it("commonjs entry point exports the factory directly", () => {
+        const requireCJS = createRequire(import.meta.filename);
+        const RequiredPool = requireCJS("../src/index.cts");
+
+        assert.equal(typeof RequiredPool, "function");
+        assert.equal(RequiredPool, Pool);
+
+        var p = RequiredPool(() => 10);
+        pools.push(p);
+
+        assert.equal(p((v) => v + 1), 11);
+    });
+
+    it("package entry points resolve per module system", () => {
+        const requireCJS = createRequire(import.meta.filename);
+
+        // both conditions of the `exports` map must reach the factory
+        const fromRequire = requireCJS("../");
+        assert.equal(fromRequire, Pool);
+
+        const pkg = requireCJS("../package.json");
+        assert.equal(pkg.main, "./src/index.cts");
+        assert.equal(pkg.exports["."].require.default, "./src/index.cts");
+        assert.equal(pkg.exports["."].import.default, "./src/index.ts");
     });
 });
