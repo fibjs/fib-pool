@@ -55,12 +55,20 @@ declare namespace FibPoolNS {
 }
 
 /**
- * Calls the value when it is a function and ignores it otherwise: a pooled item
- * may expose a plain property named close/destroy/dispose.
+ * Calls `name` on `item` when it is a function and ignores it otherwise: a
+ * pooled item may expose a plain property named close/destroy/dispose, and it
+ * may not have the member at all.
+ *
+ * The member is invoked as `item[name]()` rather than through a detached
+ * reference. Lifecycle members are normally methods, so they may use `this` to
+ * reach the resource they close; calling a detached copy would run it with
+ * `this` undefined and lose that access.
  */
-function callIfFunction(v: unknown) {
-    if (util.isFunction(v))
-        (v as (...args: any[]) => any)();
+function callIfFunction(item: object, name: keyof FibPoolNS.DippedItemStruct) {
+    const value = (item as any)[name];
+
+    if (util.isFunction(value))
+        (value as (...args: any[]) => any).call(item);
 }
 
 /**
@@ -191,9 +199,9 @@ export default function GetPool<
 
         const item = o as FibPoolNS.DippedItemStruct;
 
-        callIfFunction(item.close);
-        callIfFunction(item.destroy);
-        callIfFunction(item.dispose);
+        callIfFunction(item, 'close');
+        callIfFunction(item, 'destroy');
+        callIfFunction(item, 'dispose');
     });
 
     const maxsizeValue = opt.maxsize === undefined ? 10 : toPositiveInteger(opt.maxsize, 'maxsize');

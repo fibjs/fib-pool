@@ -928,6 +928,58 @@ describe("pool", () => {
         });
     });
 
+    // Lifecycle members are usually written as methods, so they may rely on
+    // `this` to reach the connection they close. Calling them detached (as
+    // `var fn = item.close; fn()`) loses that binding and throws, which turned
+    // every such item into a failed destroy.
+    it("default destroy keeps the item as this for lifecycle members", () => {
+        const seen = [];
+
+        var p = Pool(() => ({
+            tag: "conn",
+            close() { seen.push(["close", this.tag]); },
+            destroy() { seen.push(["destroy", this.tag]); },
+            dispose() { seen.push(["dispose", this.tag]); },
+        }), 1);
+        pools.push(p);
+
+        p((o) => o.tag);
+
+        p.clear();
+        coroutine.sleep(20);
+
+        assert.deepEqual(seen, [
+            ["close", "conn"],
+            ["destroy", "conn"],
+            ["dispose", "conn"],
+        ]);
+    });
+
+    it("a lifecycle member that is not a function is ignored", () => {
+        // strict mode guards only *reading* close/destroy/dispose as members
+        // named exactly that, so this pool runs with strict off to let the
+        // callback inspect the plain values. The point is that the default
+        // destroy leaves them alone instead of trying to call them.
+        const p = Pool({
+            create: () => ({
+                close: "not callable",
+                destroy: 0,
+                dispose: null,
+            }),
+            strict: false,
+            maxsize: 1
+        });
+        pools.push(p);
+
+        const item = p((o) => o);
+        assert.equal(item.close, "not callable");
+        assert.equal(item.destroy, 0);
+        assert.equal(item.dispose, null);
+
+        p.clear();
+        coroutine.sleep(20);
+    });
+
     // `require('fib-pool')` must hand back the factory itself, not a module
     // namespace object. The ESM implementation is bridged by src/index.cts.
     it("commonjs entry point exports the factory directly", () => {
