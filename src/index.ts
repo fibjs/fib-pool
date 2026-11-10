@@ -3,9 +3,17 @@ import * as util from 'util';
 
 declare namespace FibPoolNS {
     /**
-     * The shape `create` must return. All three members are optional: the
-     * default destroy calls whichever of them the item actually provides, and
-     * a non-function value (a plain property) is ignored.
+     * The shape the default destroy looks for. All three members are optional:
+     * it calls whichever of them the item actually provides, and a non-function
+     * value (a plain property) is ignored.
+     *
+     * This is deliberately *not* a constraint on the pooled item. Every member
+     * is optional, which makes it a weak type, and TypeScript rejects any type
+     * without a property in common with a weak type. Constraining the item to
+     * it would reject the perfectly valid `Pool(() => 10)` and
+     * `Pool(() => ({ value: 1 }))`, so the constraint is absent and the cast to
+     * this shape happens only inside the default destroy, where a primitive
+     * simply has no such member to call.
      */
     interface DippedItemStruct {
         close?: unknown;
@@ -13,7 +21,11 @@ declare namespace FibPoolNS {
         dispose?: unknown;
     }
 
-    interface FibPoolOptionArgs<T extends DippedItemStruct = {}> {
+    /**
+     * `T` is the pooled item and may be anything `create` returns, including a
+     * primitive. It is only inferred, never constrained.
+     */
+    interface FibPoolOptionArgs<T = any> {
         create: (name: string) => T;
         destroy?: (item?: T) => any;
         maxsize?: number;
@@ -147,8 +159,8 @@ function wrapStrict<T extends object>(item: () => T | undefined): T {
 }
 
 export default function GetPool<
-    T_CREATED_ITEM extends FibPoolNS.DippedItemStruct,
-    T_POOL_FUNC_RETURN
+    T_CREATED_ITEM,
+    T_POOL_FUNC_RETURN = any
 > (
     _opt: FibPoolNS.FibPoolOptionArgs<T_CREATED_ITEM> | FibPoolNS.FibPoolOptionArgs<T_CREATED_ITEM>['create'],
     maxsize?: number,
@@ -168,15 +180,20 @@ export default function GetPool<
     }
 
     const create = opt.create;
-    const destroy = opt.destroy || ((o: FibPoolNS.DippedItemStruct | undefined) => {
-        /* create is allowed to return null/undefined: there is nothing to
-           destroy then */
+    const destroy = opt.destroy || ((o: unknown) => {
+        /* create may return null/undefined or any primitive: there is nothing
+           to destroy then. Functions are kept, since they can carry members. */
         if (o === null || o === undefined)
             return;
 
-        callIfFunction(o.close);
-        callIfFunction(o.destroy);
-        callIfFunction(o.dispose);
+        if (typeof o !== 'object' && typeof o !== 'function')
+            return;
+
+        const item = o as FibPoolNS.DippedItemStruct;
+
+        callIfFunction(item.close);
+        callIfFunction(item.destroy);
+        callIfFunction(item.dispose);
     });
 
     const maxsizeValue = opt.maxsize === undefined ? 10 : toPositiveInteger(opt.maxsize, 'maxsize');

@@ -12,7 +12,7 @@ npm install fib-pool [--save]
 
 ```sh
 npm test        # fibjs test
-npm run typecheck   # fibjs --check
+npm run typecheck   # fibjs --check, including test/types.ts
 ```
 
 ## Creating a pool
@@ -112,6 +112,19 @@ var res = p("test", (conn) => {
 | `timeout` | positive number (ms) | `60000` | how long an idle item is kept |
 | `retry` | positive integer | `1` | how many times `create` is attempted before giving up |
 | `strict` | boolean | `true` | see below |
+
+The pooled item is unconstrained: `create` may return an object, a class
+instance, a function, or a primitive. The default `destroy` calls whichever of
+`close` / `destroy` / `dispose` the item provides and ignores items that have
+none of them.
+
+```js
+var p = Pool(() => 10);                // a primitive item
+p((v) => v + 1);
+
+var q = Pool(() => ({ value: 1 }));    // a plain object, nothing to destroy
+q((o) => o.value);
+```
 
 Invalid `maxsize`, `timeout` and `retry` values throw a `TypeError` when the
 pool is created rather than being silently coerced:

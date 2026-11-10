@@ -881,6 +881,53 @@ describe("pool", () => {
         assert.equal(p.info().timeout, 60000);
     });
 
+    // The pooled item is not constrained: `create` may return a primitive, a
+    // function, or a plain object with no close/destroy/dispose member. These
+    // cases used to be rejected by the type constraint even though the runtime
+    // always supported them.
+    it("an item may be a primitive", () => {
+        var p = Pool(() => 10);
+        pools.push(p);
+
+        assert.equal(p((v) => v + 1), 11);
+        assert.strictEqual(p((v) => v), 10);
+    });
+
+    it("an item may be a plain object without lifecycle members", () => {
+        var p = Pool(() => ({ value: 1 }));
+        pools.push(p);
+
+        assert.equal(p((o) => o.value), 1);
+    });
+
+    it("an item may be a function", () => {
+        var closed = 0;
+
+        var p = Pool(() => {
+            var fn = () => "called";
+            fn.close = () => { closed++; };
+            return fn;
+        }, 1);
+        pools.push(p);
+
+        assert.equal(p((fn) => fn()), "called");
+
+        p.clear();
+        coroutine.sleep(20);
+        assert.equal(closed, 1);
+    });
+
+    it("a primitive item is destroyed without failing", () => {
+        // the default destroy must not try to read close/destroy/dispose off a
+        // primitive, and must not throw on null/undefined either
+        [0, "", false, null, undefined].forEach((value) => {
+            var p = Pool({ create: () => value }, 1);
+            pools.push(p);
+
+            assert.strictEqual(p((v) => v), value);
+        });
+    });
+
     // `require('fib-pool')` must hand back the factory itself, not a module
     // namespace object. The ESM implementation is bridged by src/index.cts.
     it("commonjs entry point exports the factory directly", () => {
