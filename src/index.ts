@@ -27,11 +27,11 @@ declare namespace FibPoolNS {
      */
     interface FibPoolOptionArgs<T = any> {
         create: (name: string) => T;
-        destroy?: (item?: T) => any;
-        maxsize?: number;
-        timeout?: number;
-        retry?: number;
-        strict?: boolean;
+        destroy?: ((item?: T) => any) | undefined;
+        maxsize?: number | undefined;
+        timeout?: number | undefined;
+        retry?: number | undefined;
+        strict?: boolean | undefined;
     }
 
     interface FibPoolDipperFn<T_CREATED_ITEM, T_POOL_FUNC_RETURN = any> {
@@ -126,8 +126,12 @@ function wrapStrict<T extends object>(item: () => T | undefined): T {
         return o;
     };
 
+    /* the unused trap arguments are named with a leading underscore: this
+       package points `types` at its own source, so consumers typecheck this
+       file and a flagged-but-unused parameter here would fail their build
+       under `noUnusedParameters` */
     return new Proxy({}, {
-        get(target, prop) {
+        get(_target, prop) {
             if (prop === 'close' || prop === 'destroy' || prop === 'dispose')
                 throw new Error("Cannot close/destroy/dispose");
 
@@ -144,7 +148,7 @@ function wrapStrict<T extends object>(item: () => T | undefined): T {
             }
             return value;
         },
-        has(target, prop) {
+        has(_target, prop) {
             /* no close/destroy/dispose refusal here: the key is reported like
                any other (ownKeys lists it too), only reading or calling those
                members is refused, in `get` */
@@ -153,7 +157,7 @@ function wrapStrict<T extends object>(item: () => T | undefined): T {
         ownKeys() {
             return Reflect.ownKeys(current() as object);
         },
-        getOwnPropertyDescriptor(target, prop) {
+        getOwnPropertyDescriptor(_target, prop) {
             const d = Reflect.getOwnPropertyDescriptor(current() as object, prop);
 
             /* every key of the proxy target is configurable: a descriptor that
@@ -226,8 +230,8 @@ export default function GetPool<
     const jobs = <{
         name: string;
         ev: Class_Event;
-        o?: T_CREATED_ITEM;
-        e?: Error;
+        o?: T_CREATED_ITEM | undefined;
+        e?: Error | undefined;
     }[]>[];
 
     let count = 0;
